@@ -292,7 +292,7 @@ static int converged(unsigned fdim, const double *vals, const double *errs,
    
 int pcubature_v_buf(unsigned fdim, integrand_v f, void *fdata,
 		    unsigned dim, const double *xmin, const double *xmax,
-		    size_t maxEval,
+		    size_t maxEval, size_t *numEval,
 		    double reqAbsError, double reqRelError,
 		    error_norm norm,
 		    unsigned *m,
@@ -301,7 +301,8 @@ int pcubature_v_buf(unsigned fdim, integrand_v f, void *fdata,
 {
      int ret = FAILURE;
      double V = 1;
-     size_t numEval = 0, new_nbuf;
+     *numEval = 0;
+     size_t new_nbuf;
      unsigned i;
      valcache vc = {0, NULL};
      double *val1 = NULL;
@@ -348,7 +349,7 @@ int pcubature_v_buf(unsigned fdim, integrand_v f, void *fdata,
 
 	  eval_integral(vc, m, fdim, dim, V, &mi, val, err, val1);
 	  if (converged(fdim, val, err, reqAbsError, reqRelError, norm)
-	      || (numEval > maxEval && maxEval)) {
+	      || (*numEval > maxEval && maxEval)) {
 	       ret = SUCCESS;
 	       goto done;
 	  }
@@ -367,7 +368,7 @@ int pcubature_v_buf(unsigned fdim, integrand_v f, void *fdata,
 	  if (add_cacheval(&vc, m, mi, fdim, f, fdata, 
 			   dim, xmin, xmax, *buf, *nbuf) != SUCCESS)
 	       goto done; /* FAILURE */
-	  numEval += new_nbuf;
+	  *numEval += new_nbuf;
      }
 
 done:
@@ -382,7 +383,7 @@ done:
 
 int pcubature_v(unsigned fdim, integrand_v f, void *fdata,
 		unsigned dim, const double *xmin, const double *xmax,
-		size_t maxEval, double reqAbsError, double reqRelError,
+		size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError,
 		error_norm norm,
 		double *val, double *err)
 {
@@ -392,7 +393,7 @@ int pcubature_v(unsigned fdim, integrand_v f, void *fdata,
      double *buf = NULL;
      memset(m, 0, sizeof(unsigned) * dim);
      ret = pcubature_v_buf(fdim, f, fdata, dim, xmin, xmax,
-				  maxEval, reqAbsError, reqRelError, norm,
+				  maxEval, numEval, reqAbsError, reqRelError, norm,
 				  m, &buf, &nbuf, DEFAULT_MAX_NBUF, val, err);
      free(buf);
      return ret;
@@ -402,7 +403,7 @@ int pcubature_v(unsigned fdim, integrand_v f, void *fdata,
 
 int pcubature(unsigned fdim, integrand f, void *fdata,
 	      unsigned dim, const double *xmin, const double *xmax,
-	      size_t maxEval, double reqAbsError, double reqRelError,
+	      size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError,
 	      error_norm norm,
 	      double *val, double *err)
 {
@@ -416,7 +417,7 @@ int pcubature(unsigned fdim, integrand f, void *fdata,
      memset(m, 0, sizeof(unsigned) * dim);
      ret = pcubature_v_buf(
 	  fdim, fv, &d, dim, xmin, xmax, 
-	  maxEval, reqAbsError, reqRelError, norm,
+	  maxEval, numEval, reqAbsError, reqRelError, norm,
 	  m, &buf, &nbuf, 16 /* max_nbuf > 0 to amortize function overhead */,
 	  val, err);
      free(buf);

@@ -915,12 +915,12 @@ static int converged(unsigned fdim, const esterr *ee,
 static int rulecubature(rule *r, unsigned fdim,
 			integrand_v f, void *fdata,
 			const hypercube *h,
-			size_t maxEval,
+			size_t maxEval, size_t *numEval,
 			double reqAbsError, double reqRelError,
 			error_norm norm,
 			double *val, double *err, int parallel)
 {
-     size_t numEval = 0;
+     *numEval = 0;
      heap regions;
      unsigned i, j;
      region *R = NULL; /* array of regions to evaluate */
@@ -944,9 +944,9 @@ static int rulecubature(rule *r, unsigned fdim,
 	 || eval_regions(1, R, f, fdata, r)
 	 || heap_push(&regions, R[0]))
 	       goto bad;
-     numEval += r->num_points;
+     *numEval += r->num_points;
 
-     while (numEval < maxEval || !maxEval) {
+     while (*numEval < maxEval || !maxEval) {
 	  if (converged(fdim, regions.ee, reqAbsError, reqRelError, norm))
 	       break;
 
@@ -989,11 +989,11 @@ static int rulecubature(rule *r, unsigned fdim,
 		    R[nR] = heap_pop(&regions);
 		    for (j = 0; j < fdim; ++j) ee[j].err -= R[nR].ee[j].err;
 		    if (cut_region(R+nR, R+nR+1)) goto bad;
-		    numEval += r->num_points * 2;
+		    *numEval += r->num_points * 2;
 		    nR += 2;
 		    if (converged(fdim, ee, reqAbsError, reqRelError, norm))
 			 break; /* other regions have small errs */
-	       } while (regions.n > 0 && (numEval < maxEval || !maxEval));
+	       } while (regions.n > 0 && (*numEval < maxEval || !maxEval));
 	       if (eval_regions(nR, R, f, fdata, r)
 		   || heap_push_many(&regions, nR, R))
 		    goto bad;
@@ -1004,7 +1004,7 @@ static int rulecubature(rule *r, unsigned fdim,
 		   || eval_regions(2, R, f, fdata, r)
 		   || heap_push_many(&regions, 2, R))
 		    goto bad;
-	       numEval += r->num_points * 2;
+	       *numEval += r->num_points * 2;
 	  }
      }
 
@@ -1033,7 +1033,7 @@ bad:
 
 static int cubature(unsigned fdim, integrand_v f, void *fdata,
 		    unsigned dim, const double *xmin, const double *xmax,
-		    size_t maxEval, double reqAbsError, double reqRelError,
+		    size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError,
 		    error_norm norm,
 		    double *val, double *err, int parallel)
 {
@@ -1060,7 +1060,7 @@ static int cubature(unsigned fdim, integrand_v f, void *fdata,
      h = make_hypercube_range(dim, xmin, xmax);
      status = !h.data ? FAILURE
 	  : rulecubature(r, fdim, f, fdata, &h,
-				maxEval, reqAbsError, reqRelError, norm,
+				maxEval, numEval, reqAbsError, reqRelError, norm,
 				val, err, parallel);
      destroy_hypercube(&h);
      destroy_rule(r);
@@ -1069,19 +1069,19 @@ static int cubature(unsigned fdim, integrand_v f, void *fdata,
 
 int hcubature_v(unsigned fdim, integrand_v f, void *fdata,
                 unsigned dim, const double *xmin, const double *xmax,
-                size_t maxEval, double reqAbsError, double reqRelError,
+                size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError,
                 error_norm norm,
                 double *val, double *err)
 {
      return cubature(fdim, f, fdata, dim, xmin, xmax,
-		     maxEval, reqAbsError, reqRelError, norm, val, err, 1);
+		     maxEval, numEval, reqAbsError, reqRelError, norm, val, err, 1);
 }
 
 #include "vwrapper.h"
 
 int hcubature(unsigned fdim, integrand f, void *fdata,
 	      unsigned dim, const double *xmin, const double *xmax,
-	      size_t maxEval, double reqAbsError, double reqRelError,
+	      size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError,
 	      error_norm norm,
 	      double *val, double *err)
 {
@@ -1092,7 +1092,7 @@ int hcubature(unsigned fdim, integrand f, void *fdata,
 
      d.f = f; d.fdata = fdata;
      ret = cubature(fdim, fv, &d, dim, xmin, xmax,
-		    maxEval, reqAbsError, reqRelError, norm, val, err, 0);
+		    maxEval, numEval, reqAbsError, reqRelError, norm, val, err, 0);
      return ret;
 }
 

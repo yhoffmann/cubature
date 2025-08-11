@@ -82,14 +82,14 @@ typedef enum {
    until convergence is achieved. */
 int hcubature(unsigned fdim, integrand f, void *fdata,
 	      unsigned dim, const double *xmin, const double *xmax, 
-	      size_t maxEval, double reqAbsError, double reqRelError, 
+	      size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError, 
 	      error_norm norm,
 	      double *val, double *err);
 
 /* as hcubature, but vectorized integrand */
 int hcubature_v(unsigned fdim, integrand_v f, void *fdata,
 		unsigned dim, const double *xmin, const double *xmax, 
-		size_t maxEval, double reqAbsError, double reqRelError, 
+		size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError, 
 		error_norm norm,
 		double *val, double *err);
 
@@ -99,7 +99,7 @@ int hcubature_v(unsigned fdim, integrand_v f, void *fdata,
    smooth integrands in low dimensions. */
 int pcubature_v_buf(unsigned fdim, integrand_v f, void *fdata,
 		    unsigned dim, const double *xmin, const double *xmax,
-		    size_t maxEval, 
+		    size_t maxEval, size_t *numEval,
 		    double reqAbsError, double reqRelError,
 		    error_norm norm,
 		    unsigned *m,
@@ -107,12 +107,12 @@ int pcubature_v_buf(unsigned fdim, integrand_v f, void *fdata,
 		    double *val, double *err);
 int pcubature_v(unsigned fdim, integrand_v f, void *fdata,
 		unsigned dim, const double *xmin, const double *xmax, 
-		size_t maxEval, double reqAbsError, double reqRelError, 
+		size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError, 
 		error_norm norm,
 		double *val, double *err);
 int pcubature(unsigned fdim, integrand f, void *fdata,
 	      unsigned dim, const double *xmin, const double *xmax, 
-	      size_t maxEval, double reqAbsError, double reqRelError, 
+	      size_t maxEval, size_t *numEval, double reqAbsError, double reqRelError, 
 	      error_norm norm,
 	      double *val, double *err);
 
